@@ -1,0 +1,40 @@
+version: "3.9"  # Or your preferred version
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - cadvisor
+    networks:
+      - monitor-network
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - 3000:3000
+    depends_on:
+      - prometheus
+    volumes:
+       - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin  # Change if needed
+      - GF_SECURITY_ADMIN_PASSWORD=admin # Change if needed (Strong password in production)
+    networks:
+      - monitor-network
+
+  cadvisor:
+    image: google/cadvisor:latest
+    ports:
+      - 8080:8080
+    volumes:
+      - /:/root:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - monitor-network
+
+networks:
+  monitor-network:
